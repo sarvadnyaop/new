@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NM Hub | Unofficial</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { background: #0B0F17; font-family: 'DM Sans', sans-serif; color: #e2e8f0; min-height: 100dvh; display: flex; justify-content: center; }
+    #root { width: 100%; max-width: 430px; background: #121824; min-height: 100dvh; display: flex; flex-direction: column; }
+
+    @keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } }
+
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .screen { display: flex; flex-direction: column; flex: 1; }
+    .hidden { display: none !important; }
+
+    /* Onboarding */
+    #onboarding { padding: 32px 24px 24px; justify-content: space-between; }
+    .badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); border-radius: 100px; padding: 4px 12px; margin-bottom: 20px; }
+    .badge span { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: #60a5fa; text-transform: uppercase; }
+    .dot-wrap { position: relative; display: inline-flex; width: 10px; height: 10px; flex-shrink: 0; }
+    .dot-ping { position: absolute; inset: 0; border-radius: 50%; opacity: 0.5; animation: ping 1.4s cubic-bezier(0,0,0.2,1) infinite; }
+    .dot-solid { width: 10px; height: 10px; border-radius: 50%; display: block; }
+    h1.logo { font-size: 44px; font-weight: 900; letter-spacing: -0.03em; line-height: 1; background: linear-gradient(120deg, #60a5fa, #818cf8, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
+    .tagline { color: #6b7280; font-size: 13px; margin-bottom: 28px; line-height: 1.6; }
+    .form-group { display: flex; flex-direction: column; gap: 14px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    label.lbl { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6b7280; display: block; margin-bottom: 6px; }
+    input, select { width: 100%; background: #1A2333; border: 1.5px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 12px 16px; font-size: 14px; color: #e2e8f0; outline: none; font-family: inherit; transition: border-color 0.2s; }
+    input::placeholder { color: #4b5563; }
+    input:focus, select:focus { border-color: rgba(99,102,241,0.5); }
+    select { cursor: pointer; }
+    .btn-enter { margin-top: 6px; background: linear-gradient(135deg, #3b82f6, #6366f1); border: none; border-radius: 14px; padding: 14px; color: #fff; font-weight: 800; font-size: 14px; cursor: pointer; font-family: inherit; box-shadow: 0 8px 24px rgba(99,102,241,0.3); width: 100%; transition: opacity 0.2s; }
+    .btn-enter:active { opacity: 0.85; }
+    .footer-note { text-align: center; font-size: 11px; color: #374151; padding-top: 20px; }
+
+    /* Dashboard */
+    #dashboard { height: 100dvh; overflow: hidden; }
+    .dash-header { padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.07); background: #151C2B; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    .dash-title { font-size: 18px; font-weight: 900; letter-spacing: -0.02em; color: #fff; }
+    .dash-title span { color: #60a5fa; }
+    .dash-sub { font-size: 12px; color: #6b7280; margin-top: 2px; }
+    .dash-sub b { color: #d1d5db; font-weight: 600; }
+    .live-badge { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25); border-radius: 8px; padding: 4px 10px; font-size: 11px; font-weight: 700; color: #34d399; display: flex; align-items: center; gap: 6px; }
+    .dash-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 24px; }
+    .section-label { font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .section-header-left { display: flex; align-items: center; gap: 8px; }
+    .auto-wipe { font-size: 10px; color: #4b5563; }
+    .empty-state { background: #161D2B; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px; text-align: center; font-size: 12px; color: #4b5563; font-style: italic; }
+    .proxy-list, .chat-list { display: flex; flex-direction: column; gap: 8px; }
+
+    /* Proxy card */
+    .proxy-card { background: linear-gradient(135deg, rgba(127,29,29,0.3), rgba(28,22,37,0.8)); border: 1px solid rgba(153,27,27,0.4); border-radius: 14px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .proxy-tag { font-size: 10px; font-weight: 800; color: #f87171; letter-spacing: 0.08em; text-transform: uppercase; display: block; margin-bottom: 2px; }
+    .proxy-roll { font-size: 13px; font-weight: 700; color: #fff; }
+    .proxy-roll span { color: #facc15; }
+    .btn-cover { background: #dc2626; border: none; border-radius: 10px; padding: 7px 14px; color: #fff; font-weight: 800; font-size: 12px; cursor: pointer; font-family: inherit; transition: background 0.2s; white-space: nowrap; }
+    .btn-cover.claimed { background: #065f46; cursor: not-allowed; }
+
+    /* Chat bubble */
+    .chat-bubble { border-radius: 12px; padding: 10px 12px; }
+    .chat-bubble.peer { background: #161D2B; border: 1px solid rgba(255,255,255,0.06); }
+    .chat-bubble.me { background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); }
+    .chat-sender { font-size: 11px; font-weight: 700; display: block; margin-bottom: 3px; }
+    .chat-bubble.peer .chat-sender { color: #60a5fa; }
+    .chat-bubble.me .chat-sender { color: #a5b4fc; }
+    .chat-text { font-size: 13px; color: #cbd5e1; line-height: 1.5; }
+
+    /* Footer */
+    .dash-footer { padding: 12px 14px 20px; border-top: 1px solid rgba(255,255,255,0.07); background: #151C2B; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
+    .tabs { display: flex; gap: 10px; }
+    .tab-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 14px; font-size: 13px; font-weight: 800; cursor: pointer; font-family: inherit; border: 2px solid; transition: all 0.2s; }
+    .tab-btn.proxy-active { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.5); color: #fca5a5; box-shadow: 0 0 16px rgba(239,68,68,0.2); }
+    .tab-btn.proxy-inactive { background: #1A2233; border-color: rgba(107,114,128,0.15); color: #6b7280; }
+    .tab-btn.chat-active { background: rgba(99,102,241,0.2); border-color: rgba(99,102,241,0.5); color: #a5b4fc; box-shadow: 0 0 16px rgba(99,102,241,0.2); }
+    .tab-btn.chat-inactive { background: #1A2233; border-color: rgba(107,114,128,0.15); color: #6b7280; }
+    .input-row { display: flex; gap: 8px; }
+    .main-input { flex: 1; border-radius: 12px; padding: 11px 14px; font-size: 13px; }
+    .btn-post { background: linear-gradient(135deg, #3b82f6, #6366f1); border: none; border-radius: 12px; padding: 11px 18px; color: #fff; font-weight: 800; font-size: 13px; cursor: pointer; font-family: inherit; box-shadow: 0 4px 12px rgba(99,102,241,0.3); white-space: nowrap; }
+    .btn-post:active { opacity: 0.85; }
+
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
+  </style>
+</head>
+<body>
+<div id="root">
+
+  <!-- ONBOARDING -->
+  <div id="onboarding" class="screen" style="justify-content:space-between;">
+    <div>
+      <div class="badge">
+        <span class="dot-wrap"><span class="dot-ping" style="background:#3b82f6"></span><span class="dot-solid" style="background:#3b82f6"></span></span>
+        <span>Unofficial NM Network</span>
+      </div>
+      <h1 class="logo">NM HUB.</h1>
+      <p class="tagline">Skip the admin eye. Connect with your actual division batch instantly.</p>
+      <div class="form-group">
+        <div>
+          <label class="lbl">Full Name</label>
+          <input type="text" id="inp-name" placeholder="eg. Aarav Mehta" />
+        </div>
+        <div>
+          <label class="lbl">SAP ID / Application No.</label>
+          <input type="number" id="inp-sap" placeholder="11-digit portal number" />
+        </div>
+        <div class="grid-2">
+          <div>
+            <label class="lbl">Course</label>
+            <select id="inp-course">
+              <optgroup label="Junior College"><option>FYJC</option><option>SYJC</option></optgroup>
+              <optgroup label="Degree College"><option>B.Com</option><option>BMS</option><option>BAF</option><option>BFM</option></optgroup>
+            </select>
+          </div>
+          <div>
+            <label class="lbl">Division</label>
+            <select id="inp-div">
+              <option>Div A</option><option>Div B</option><option>Div C</option><option>Div D</option>
+              <option>Div E</option><option>Div F</option><option>Div G</option><option>Div H</option><option>Div I</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-enter" onclick="handleEnter()">Enter Secret Vault →</button>
+      </div>
+    </div>
+    <p class="footer-note">Encrypted access. No records shared with SVKM authorities.</p>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="screen hidden" style="flex-direction:column;">
+    <div class="dash-header">
+      <div>
+        <div class="dash-title"><span id="disp-div">BMS Div A</span> Hub</div>
+        <div class="dash-sub">Welcome, <b id="disp-name">User</b></div>
+      </div>
+      <div class="live-badge">
+        <span class="dot-wrap"><span class="dot-ping" style="background:#10b981"></span><span class="dot-solid" style="background:#10b981"></span></span>
+        Live
+      </div>
+    </div>
+
+    <div class="dash-body">
+      <!-- Proxy section -->
+      <div>
+        <div class="section-header">
+          <div class="section-header-left">
+            <span class="dot-wrap"><span class="dot-ping" style="background:#ef4444"></span><span class="dot-solid" style="background:#ef4444"></span></span>
+            <span class="section-label" style="color:#f87171">Active Proxy Requests</span>
+          </div>
+          <span class="auto-wipe">Auto-wipes in 60m</span>
+        </div>
+        <div class="proxy-list" id="proxy-list">
+          <div class="empty-state" id="proxy-empty">No alerts right now. The coast is clear. 🌊</div>
+        </div>
+      </div>
+
+      <!-- Chat section -->
+      <div>
+        <div style="margin-bottom:10px;">
+          <span class="section-label" style="color:#6b7280">Campus Anonymous Feed</span>
+        </div>
+        <div class="chat-list" id="chat-list">
+          <div class="chat-bubble peer">
+            <span class="chat-sender">Anonymous Peer</span>
+            <p class="chat-text">Library AC is finally fixed btw.</p>
+          </div>
+          <div class="chat-bubble peer">
+            <span class="chat-sender">Anonymous Senior</span>
+            <p class="chat-text">Prof. Shah is taking attendance aggressively today in Room 402. Don't slip up.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dash-footer">
+      <div class="tabs">
+        <button id="tab-proxy" class="tab-btn proxy-active" onclick="switchTab('proxy')">
+          <span class="dot-wrap" id="dot-proxy"><span class="dot-ping" style="background:#ef4444"></span><span class="dot-solid" style="background:#ef4444"></span></span>
+          🚨 Request Proxy
+        </button>
+        <button id="tab-chat" class="tab-btn chat-inactive" onclick="switchTab('chat')">
+          💬 Drop Gossip
+        </button>
+      </div>
+      <div class="input-row">
+        <input type="text" id="main-input" class="main-input" placeholder="Enter your Roll No. for proxy..." onkeydown="if(event.key==='Enter') handlePost()" />
+        <button class="btn-post" onclick="handlePost()">Post</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let activeTab = 'proxy';
+
+  function handleEnter() {
+    const name = document.getElementById('inp-name').value.trim();
+    const sap = document.getElementById('inp-sap').value.trim();
+    const course = document.getElementById('inp-course').value;
+    const div = document.getElementById('inp-div').value;
+    if (!name || !sap) { alert('Please fill in your name and SAP ID.'); return; }
+    document.getElementById('disp-div').textContent = course + ' ' + div;
+    document.getElementById('disp-name').textContent = name.split(' ')[0];
+    document.getElementById('onboarding').classList.add('hidden');
+    document.getElementById('dashboard').classList.remove('hidden');
+  }
+
+  function switchTab(tab) {
+    activeTab = tab;
+    const input = document.getElementById('main-input');
+    const tProxy = document.getElementById('tab-proxy');
+    const tChat = document.getElementById('tab-chat');
+    const dotProxy = document.getElementById('dot-proxy');
+    if (tab === 'proxy') {
+      input.placeholder = 'Enter your Roll No. for proxy...';
+      tProxy.className = 'tab-btn proxy-active';
+      tChat.className = 'tab-btn chat-inactive';
+      dotProxy.innerHTML = '<span class="dot-ping" style="background:#ef4444"></span><span class="dot-solid" style="background:#ef4444"></span>';
+      tProxy.prepend(dotProxy);
+    } else {
+      input.placeholder = 'Say something anonymously...';
+      tChat.className = 'tab-btn chat-active';
+      tProxy.className = 'tab-btn proxy-inactive';
+      dotProxy.remove();
+      const newDot = document.createElement('span');
+      newDot.className = 'dot-wrap';
+      newDot.id = 'dot-chat';
+      newDot.innerHTML = '<span class="dot-ping" style="background:#6366f1"></span><span class="dot-solid" style="background:#6366f1"></span>';
+      tChat.prepend(newDot);
+    }
+    input.focus();
+  }
+
+  function handlePost() {
+    const input = document.getElementById('main-input');
+    const val = input.value.trim();
+    if (!val) return;
+    if (activeTab === 'proxy') addProxy(val);
+    else addChat(val);
+    input.value = '';
+  }
+
+  function addProxy(roll) {
+    document.getElementById('proxy-empty')?.remove();
+    const list = document.getElementById('proxy-list');
+    const card = document.createElement('div');
+    card.className = 'proxy-card';
+    const id = 'p' + Date.now();
+    card.innerHTML = `
+      <div>
+        <span class="proxy-tag">ROLL CALL ALERT</span>
+        <p class="proxy-roll">Roll No: <span>${roll}</span></p>
+      </div>
+      <button class="btn-cover" id="${id}" onclick="claimProxy('${id}')">Cover It</button>
+    `;
+    list.prepend(card);
+  }
+
+  function claimProxy(id) {
+    const btn = document.getElementById(id);
+    btn.textContent = '✓ Covered';
+    btn.classList.add('claimed');
+    btn.disabled = true;
+  }
+
+  function addChat(text) {
+    const list = document.getElementById('chat-list');
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble me';
+    bubble.innerHTML = `<span class="chat-sender">You (Anon)</span><p class="chat-text">${text}</p>`;
+    list.prepend(bubble);
+  }
+</script>
+</body>
+</html>
